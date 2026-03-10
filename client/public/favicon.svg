@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" role="img" aria-label="Academic Assessment Quality Analyzer">
+  <defs>
+    <linearGradient id="cap" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#1f3c88"/>
+      <stop offset="1" stop-color="#0f766e"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="14" fill="#f7f4ef"/>
+  <path d="M32 12 8 22l24 10 24-10-24-10z" fill="url(#cap)"/>
+  <path d="M14 28v10c0 8 36 8 36 0V28l-18 7-18-7z" fill="#111827" opacity="0.9"/>
+  <circle cx="50" cy="38" r="3" fill="#f59e0b"/>
+  <path d="M50 41v11" stroke="#f59e0b" stroke-width="2" stroke-linecap="round"/>
+</svg>

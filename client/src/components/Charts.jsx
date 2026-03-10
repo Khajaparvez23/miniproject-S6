@@ -1,0 +1,268 @@
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  Legend,
+  Line,
+  LineChart,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from 'recharts'
+
+const DIFFICULTY_COLORS = {
+  Easy: '#38bdf8',
+  Medium: '#fbbf24',
+  Hard: '#f87171',
+}
+
+export function DifficultyChart({ data }) {
+  const prepared = (data || []).map((entry) => ({
+    name: entry._id || 'Unknown',
+    value: entry.count || 0,
+  }))
+
+  if (!prepared.length) {
+    return <div className="empty">No difficulty data yet.</div>
+  }
+
+  return (
+    <div className="chart-card">
+      <h4>Difficulty distribution</h4>
+      <div className="chart">
+        <ResponsiveContainer width="100%" height={240}>
+          <PieChart>
+            <Pie data={prepared} dataKey="value" nameKey="name" innerRadius={55} outerRadius={90}>
+              {prepared.map((entry) => (
+                <Cell
+                  key={entry.name}
+                  fill={DIFFICULTY_COLORS[entry.name] || '#94a3b8'}
+                />
+              ))}
+            </Pie>
+            <Tooltip />
+          </PieChart>
+        </ResponsiveContainer>
+      </div>
+      <div className="legend">
+        {prepared.map((entry) => (
+          <span key={entry.name}>
+            <i style={{ background: DIFFICULTY_COLORS[entry.name] || '#94a3b8' }} />
+            {entry.name}: {entry.value}
+          </span>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+export function MarksChart({ assessments }) {
+  const prepared = (assessments || [])
+    .slice(0, 6)
+    .map((item) => ({
+      name: item.subject.length > 10 ? `${item.subject.slice(0, 10)}…` : item.subject,
+      marks: item.totalMarks || 0,
+    }))
+    .reverse()
+
+  if (!prepared.length) {
+    return <div className="empty">No marks analytics yet.</div>
+  }
+
+  return (
+    <div className="chart-card">
+      <h4>Marks by assessment</h4>
+      <div className="chart">
+        <ResponsiveContainer width="100%" height={240}>
+          <BarChart data={prepared}>
+            <XAxis dataKey="name" />
+            <YAxis />
+            <Tooltip />
+            <Bar dataKey="marks" fill="#1f3c88" radius={[10, 10, 0, 0]} />
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+    </div>
+  )
+}
+
+export function MarksDistributionChart({ data, title = 'Marks distribution' }) {
+  const prepared = (data || []).map((entry) => ({
+    name: entry.section || entry.name || 'Section',
+    value: Number(entry.marks ?? entry.value ?? 0),
+  }))
+
+  if (!prepared.length) {
+    return <div className="empty">No marks distribution data yet.</div>
+  }
+
+  return (
+    <div className="chart-card">
+      <h4>{title}</h4>
+      <div className="chart">
+        <ResponsiveContainer width="100%" height={240}>
+          <BarChart data={prepared}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+            <XAxis dataKey="name" tickLine={false} />
+            <YAxis allowDecimals={false} />
+            <Tooltip />
+            <Bar dataKey="value" fill="#0f766e" radius={[10, 10, 0, 0]} />
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+    </div>
+  )
+}
+
+export function PerformanceTrendChart({ data }) {
+  const prepared = (data || []).map((entry) => ({
+    name: entry.name,
+    avgScore: Number(entry.avgScore ?? 0),
+  }))
+
+  if (!prepared.length) {
+    return <div className="empty">No performance trend data yet.</div>
+  }
+
+  return (
+    <div className="chart-card">
+      <h4>Student performance trend</h4>
+      <div className="chart">
+        <ResponsiveContainer width="100%" height={240}>
+          <LineChart data={prepared}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+            <XAxis dataKey="name" tickLine={false} />
+            <YAxis allowDecimals={false} />
+            <Tooltip />
+            <Line
+              type="monotone"
+              dataKey="avgScore"
+              stroke="#1f3c88"
+              strokeWidth={3}
+              dot={{ r: 4 }}
+              activeDot={{ r: 6 }}
+            />
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
+    </div>
+  )
+}
+
+export function SgpaBarChart({ data }) {
+  const prepared = (data || []).map((entry) => ({
+    name: entry.name,
+    sgpa: Number(entry.avgScore ?? 0),
+  }))
+
+  if (!prepared.length) {
+    return <div className="empty">No semester SGPA data yet.</div>
+  }
+
+  return (
+    <div className="chart-card">
+      <h4>Semester-wise SGPA</h4>
+      <div className="chart">
+        <ResponsiveContainer width="100%" height={240}>
+          <BarChart data={prepared}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+            <XAxis dataKey="name" tickLine={false} />
+            <YAxis domain={[0, 10]} />
+            <Tooltip />
+            <Bar dataKey="sgpa" fill="#1f3c88" radius={[10, 10, 0, 0]} />
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+    </div>
+  )
+}
+
+export function ComparisonChart({ data }) {
+  const prepared = (data || []).map((entry) => ({
+    name: entry.name,
+    assessmentA: Number(entry.assessmentA ?? 0),
+    assessmentB: Number(entry.assessmentB ?? 0),
+  }))
+
+  if (!prepared.length) {
+    return <div className="empty">Select two assessments to compare.</div>
+  }
+
+  return (
+    <div className="chart-card">
+      <h4>Assessment comparison</h4>
+      <div className="chart">
+        <ResponsiveContainer width="100%" height={240}>
+          <BarChart data={prepared}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+            <XAxis dataKey="name" tickLine={false} />
+            <YAxis />
+            <Tooltip />
+            <Legend />
+            <Bar dataKey="assessmentA" fill="#1f3c88" radius={[10, 10, 0, 0]} />
+            <Bar dataKey="assessmentB" fill="#0f766e" radius={[10, 10, 0, 0]} />
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+    </div>
+  )
+}
+
+export function BalanceChart({ data }) {
+  const prepared = (data || []).map((entry) => ({
+    name: entry._id || 'Unknown',
+    value: entry.count || 0,
+  }))
+
+  if (!prepared.length) {
+    return <div className="empty">No balance data yet.</div>
+  }
+
+  return (
+    <div className="chart-card">
+      <h4>Balance status</h4>
+      <div className="chart">
+        <ResponsiveContainer width="100%" height={220}>
+          <BarChart data={prepared}>
+            <XAxis dataKey="name" />
+            <YAxis allowDecimals={false} />
+            <Tooltip />
+            <Legend />
+            <Bar dataKey="value" fill="#0f766e" radius={[10, 10, 0, 0]} />
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+    </div>
+  )
+}
+
+export function SubjectChart({ data }) {
+  const prepared = (data || []).map((entry) => ({
+    name: entry._id?.length > 10 ? `${entry._id.slice(0, 10)}…` : entry._id,
+    total: entry.total || 0,
+  }))
+
+  if (!prepared.length) {
+    return <div className="empty">No subject data yet.</div>
+  }
+
+  return (
+    <div className="chart-card">
+      <h4>Top subjects by volume</h4>
+      <div className="chart">
+        <ResponsiveContainer width="100%" height={220}>
+          <BarChart data={prepared}>
+            <XAxis dataKey="name" />
+            <YAxis allowDecimals={false} />
+            <Tooltip />
+            <Bar dataKey="total" fill="#1f3c88" radius={[10, 10, 0, 0]} />
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+    </div>
+  )
+}
