@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import { Navigate, useNavigate } from 'react-router-dom'
-import { useAuth } from '../context/AuthContext.jsx'
+import { Navigate } from 'react-router-dom'
+import { useAuth } from '../context/useAuth.js'
 
 const initialForm = {
   identifier: '',
@@ -9,7 +9,6 @@ const initialForm = {
 
 export default function Login() {
   const { isAuthenticated, login } = useAuth()
-  const navigate = useNavigate()
   const [form, setForm] = useState(initialForm)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -42,7 +41,6 @@ export default function Login() {
       await login({ identifier: form.identifier, password: form.password })
       setForm(initialForm)
       setError('')
-      navigate('/dashboard')
     } catch (err) {
       setError(err.message || 'Authentication failed.')
     } finally {
@@ -55,8 +53,9 @@ export default function Login() {
       <div className="auth-layout">
         <div className="auth-card">
           <div className="auth-head">
-            <h1>Welcome back</h1>
             <img className="auth-head-logo" src="/favicon.svg" alt="App logo" />
+            <h1>Welcome back</h1>
+            <p>Access your academic dashboard, records, and performance insights from one place.</p>
           </div>
           <form onSubmit={handleSubmit} className="auth-form" autoComplete="off">
             <label>

@@ -125,18 +125,24 @@ router.get("/", async (req, res) => {
 router.get("/faculty/student-results", requireRole("faculty", "admin"), async (req, res) => {
     try {
         const managedStudents = await User.find({ role: "student" })
-            .select("name username email")
-            .sort({ createdAt: 1 })
-            .limit(4);
+            .select("name username email registerNumber department semester")
+            .sort({ createdAt: 1 });
 
         if (!managedStudents.length) {
             return res.status(200).json([]);
         }
 
         const studentIds = managedStudents.map((item) => item._id);
-        const assessments = await Assessment.find({ user: { $in: studentIds } })
+        const assessments = await Assessment.find({
+            user: { $in: studentIds },
+            $or: [
+                { assessmentType: "exam" },
+                { assessmentType: { $exists: false } },
+                { assessmentType: null }
+            ]
+        })
             .sort({ examDate: -1, createdAt: -1 })
-            .select("user subject examDate totalMarks difficultyLevel difficultyScore passRate averageScore");
+            .select("_id user subject examDate totalMarks difficultyLevel difficultyScore passRate averageScore");
 
         const byStudent = new Map();
         for (const record of assessments) {
@@ -154,13 +160,116 @@ router.get("/faculty/student-results", requireRole("faculty", "admin"), async (r
                     id: student._id,
                     name: student.name,
                     username: student.username,
-                    email: student.email
+                    email: student.email,
+                    registerNumber: student.registerNumber,
+                    department: student.department,
+                    semester: student.semester
                 },
-                assessments: rows.slice(0, 5)
+                assessments: rows
             };
         });
 
         return res.status(200).json(result);
+    } catch (error) {
+        return res.status(500).json({ message: error.message });
+    }
+});
+
+router.get("/reports/class-performance", async (req, res) => {
+    try {
+        const students = await User.find({ role: "student" })
+            .select("_id")
+            .sort({ createdAt: 1 });
+
+        if (!students.length) {
+            return res.status(200).json({
+                totalStudents: 0,
+                classAverage: 0,
+                passPercentage: 0,
+                topScore: 0,
+                failedStudents: 0
+            });
+        }
+
+        const studentIds = students.map((student) => student._id);
+        const assessments = await Assessment.find({
+            user: { $in: studentIds },
+            $or: [
+                { assessmentType: "exam" },
+                { assessmentType: { $exists: false } },
+                { assessmentType: null }
+            ]
+        })
+            .sort({ examDate: -1, createdAt: -1 })
+            .select("user totalMarks averageScore studentMarks");
+
+        const examScores = assessments.flatMap((assessment) => {
+            const studentEntries = Array.isArray(assessment.studentMarks)
+                ? assessment.studentMarks
+                : [];
+
+            if (studentEntries.length) {
+                return studentEntries
+                    .map((entry) => {
+                        const score = Number(entry?.score);
+                        if (!Number.isFinite(score) || score < 0) {
+                            return null;
+                        }
+
+                        return {
+                            studentKey: entry?.studentId || assessment.user.toString(),
+                            score,
+                            totalMarks: Math.max(1, Number(assessment.totalMarks) || 100)
+                        };
+                    })
+                    .filter(Boolean);
+            }
+
+            const score = Number(assessment.averageScore);
+            if (!Number.isFinite(score) || score < 0) {
+                return [];
+            }
+
+            const totalMarks = Math.max(1, Number(assessment.totalMarks) || 100);
+
+            return [{
+                studentKey: assessment.user.toString(),
+                score,
+                totalMarks
+            }];
+        });
+
+        if (!examScores.length) {
+            return res.status(200).json({
+                totalStudents: 0,
+                classAverage: 0,
+                passPercentage: 0,
+                topScore: 0,
+                failedStudents: 0
+            });
+        }
+
+        const PASS_PERCENT = 45;
+        const uniqueStudents = new Set(examScores.map((entry) => entry.studentKey));
+        const failedStudents = new Set();
+        const totalScore = examScores.reduce((sum, entry) => {
+            const threshold = entry.totalMarks * (PASS_PERCENT / 100);
+            if (entry.score < threshold) {
+                failedStudents.add(entry.studentKey);
+            }
+            return sum + entry.score;
+        }, 0);
+        const passedRecords = examScores.filter(
+            (entry) => entry.score >= entry.totalMarks * (PASS_PERCENT / 100)
+        ).length;
+
+        return res.status(200).json({
+            totalStudents: uniqueStudents.size,
+            classAverage: totalScore / examScores.length,
+            passPercentage: (passedRecords / examScores.length) * 100,
+            topScore: examScores.reduce((highest, entry) => Math.max(highest, entry.score), 0),
+            failedStudents: failedStudents.size
+        });
     } catch (error) {
         return res.status(500).json({ message: error.message });
     }

@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const quietServerLogs = process.env.QUIET_SERVER_LOGS === "1";
 
 const connectDB = async () => {
     try {
@@ -7,7 +8,9 @@ const connectDB = async () => {
             maxPoolSize: 10
         });
 
-        console.log("MongoDB connected");
+        if (!quietServerLogs) {
+            console.log("MongoDB connected");
+        }
     } catch (error) {
         console.error("Database connection failed:", error.message);
         process.exit(1);

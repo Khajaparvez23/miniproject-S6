@@ -3,6 +3,8 @@ const toNumber = (value) => {
     return Number.isFinite(parsed) ? parsed : 0;
 };
 
+const PASS_THRESHOLD_PERCENT = 45;
+
 const analyzeAssessment = ({
     marksDistribution,
     questionComplexity,
@@ -55,7 +57,7 @@ const analyzeAssessment = ({
     if (studentScores.length) {
         const totalScore = studentScores.reduce((sum, value) => sum + value, 0);
         averageScore = Number((totalScore / studentScores.length).toFixed(2));
-        const passThreshold = toNumber(totalMarks) * 0.4;
+        const passThreshold = toNumber(totalMarks) * (PASS_THRESHOLD_PERCENT / 100);
         const passes = studentScores.filter((value) => value >= passThreshold).length;
         passRate = Number(((passes / studentScores.length) * 100).toFixed(2));
         performanceGap = Number((Math.max(...studentScores) - Math.min(...studentScores)).toFixed(2));

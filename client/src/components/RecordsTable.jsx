@@ -14,7 +14,6 @@ export default function RecordsTable({ assessments }) {
       <div className="table-head">
         <span>Subject</span>
         <span>Assessment</span>
-        <span>Difficulty</span>
         <span>Total marks</span>
         <span>Exam date</span>
       </div>
@@ -22,9 +21,6 @@ export default function RecordsTable({ assessments }) {
         <div className="table-row" key={row._id}>
           <span>{row.subject}</span>
           <span>{row.assessmentType}</span>
-          <span className={`chip ${row.difficultyLevel?.toLowerCase() || 'medium'}`}>
-            {row.difficultyLevel || 'Medium'}
-          </span>
           <span>{row.totalMarks}</span>
           <span>{formatDate(row.examDate)}</span>
         </div>

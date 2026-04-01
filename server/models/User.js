@@ -30,6 +30,10 @@ const userSchema = new mongoose.Schema(
             type: String,
             trim: true
         },
+        assignedSubjects: {
+            type: [String],
+            default: []
+        },
         semester: {
             type: Number,
             min: 1,

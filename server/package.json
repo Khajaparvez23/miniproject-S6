@@ -5,7 +5,7 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "node server.js",
+    "dev": "set DISABLE_HTTP_LOGS=1&& set QUIET_SERVER_LOGS=1&& node server.js",
     "test": "echo \"No tests configured\""
   },
   "keywords": [],

@@ -1,7 +1,6 @@
-import { createContext, useContext, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { AuthContext } from './auth-context.js'
 import * as api from '../services/api.js'
-
-const AuthContext = createContext(null)
 
 const storageKey = 'aqa_auth'
 
@@ -19,34 +18,41 @@ export function AuthProvider({ children }) {
   const [token, setToken] = useState(stored?.token || '')
   const [user, setUser] = useState(stored?.user || null)
 
-  const persist = (nextToken, nextUser) => {
+  const persist = useCallback((nextToken, nextUser) => {
     setToken(nextToken)
     setUser(nextUser)
     localStorage.setItem(storageKey, JSON.stringify({ token: nextToken, user: nextUser }))
-  }
+  }, [])
 
-  const clear = () => {
+  const clear = useCallback(() => {
     setToken('')
     setUser(null)
     localStorage.removeItem(storageKey)
-  }
+  }, [])
 
-  const login = async (payload) => {
+  const login = useCallback(async (payload) => {
     const data = await api.login(payload)
     persist(data.token, data.user)
     return data
-  }
+  }, [persist])
 
-  const register = async (payload) => {
+  const register = useCallback(async (payload) => {
     const data = await api.register(payload)
     persist(data.token, data.user)
     return data
-  }
+  }, [persist])
 
-  const setAuthFromToken = async (nextToken) => {
+  const setAuthFromToken = useCallback(async (nextToken) => {
     const userProfile = await api.getProfile(nextToken)
     persist(nextToken, userProfile)
-  }
+  }, [persist])
+
+  const refreshProfile = useCallback(async () => {
+    if (!token) return null
+    const userProfile = await api.getProfile(token)
+    persist(token, userProfile)
+    return userProfile
+  }, [persist, token])
 
   const value = useMemo(
     () => ({
@@ -56,18 +62,20 @@ export function AuthProvider({ children }) {
       register,
       logout: clear,
       setAuthFromToken,
+      refreshProfile,
       isAuthenticated: Boolean(token),
     }),
-    [token, user]
+    [token, user, login, register, clear, setAuthFromToken, refreshProfile]
   )
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
-}
+  useEffect(() => {
+    if (typeof window === 'undefined') return undefined
+    const handleAuthExpired = () => {
+      clear()
+    }
+    window.addEventListener('aqa:auth-expired', handleAuthExpired)
+    return () => window.removeEventListener('aqa:auth-expired', handleAuthExpired)
+  }, [clear])
 
-export const useAuth = () => {
-  const ctx = useContext(AuthContext)
-  if (!ctx) {
-    throw new Error('useAuth must be used inside AuthProvider')
-  }
-  return ctx
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }

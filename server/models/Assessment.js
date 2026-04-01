@@ -52,6 +52,11 @@ const assessmentSchema = new mongoose.Schema(
             required: true,
             trim: true
         },
+        semester: {
+            type: Number,
+            min: 1,
+            max: 8
+        },
         examiner: {
             type: String,
             required: true,

@@ -36,7 +36,9 @@ const DEFAULT_USERS = [
         username: "faculty1",
         email: process.env.FACULTY1_EMAIL || "faculty1@example.edu",
         password: "Faculty@123",
-        role: "faculty"
+        role: "faculty",
+        department: "Science and Humanities",
+        assignedSubjects: ["Mathematics", "Physics", "Chemistry"]
     },
     {
         name: "System Admin",
@@ -47,64 +49,149 @@ const DEFAULT_USERS = [
     }
 ];
 
-const SAMPLE_ASSESSMENTS = [
-    {
-        subject: "Mathematics",
-        examiner: "Faculty One",
-        assessmentType: "exam",
-        examDate: "2026-01-10",
-        totalMarks: 100,
-        marksDistribution: [
-            { section: "Section A", marks: 30 },
-            { section: "Section B", marks: 30 },
-            { section: "Section C", marks: 40 }
-        ],
-        questionComplexity: { easy: 25, medium: 50, hard: 25 },
-        studentMarks: [{ score: 72, studentId: "ST-001" }]
+const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
+
+const SEMESTER_COURSES = {
+    1: [
+        { code: "MA1101", subject: "Engineering Mathematics I" },
+        { code: "PH1101", subject: "Engineering Physics" },
+        { code: "EE1101", subject: "Basic Electrical Engineering" },
+        { code: "CS1101", subject: "Programming in C" },
+        { code: "GE1101", subject: "Engineering Graphics" },
+        { code: "HS1101", subject: "Communication Skills" }
+    ],
+    2: [
+        { code: "MA1201", subject: "Engineering Mathematics II" },
+        { code: "EC1201", subject: "Electronic Devices" },
+        { code: "EE1201", subject: "Circuit Theory" },
+        { code: "CS1201", subject: "Data Structures" },
+        { code: "GE1201", subject: "Environmental Science" },
+        { code: "ME1201", subject: "Workshop Practice" }
+    ],
+    3: [
+        { code: "EE2301", subject: "Electrical Machines I" },
+        { code: "EE2302", subject: "Network Analysis" },
+        { code: "EC2301", subject: "Digital Electronics" },
+        { code: "EC2302", subject: "Signals and Systems" },
+        { code: "EE2303", subject: "Measurements and Instrumentation" },
+        { code: "MA2301", subject: "Probability and Statistics" }
+    ],
+    4: [
+        { code: "EE2401", subject: "Electrical Machines II" },
+        { code: "EE2402", subject: "Control Systems" },
+        { code: "EC2401", subject: "Microprocessors and Microcontrollers" },
+        { code: "EE2403", subject: "Power Systems I" },
+        { code: "EC2402", subject: "Linear Integrated Circuits" },
+        { code: "EE2404", subject: "Electromagnetic Fields" }
+    ],
+    5: [
+        { code: "EE3501", subject: "Power Electronics" },
+        { code: "EE3502", subject: "Power Systems II" },
+        { code: "EC3501", subject: "Digital Signal Processing" },
+        { code: "EC3502", subject: "Embedded Systems" },
+        { code: "EE3503", subject: "Renewable Energy Systems" },
+        { code: "EE35E1", subject: "Professional Elective I" }
+    ],
+    6: [
+        { code: "EC3601", subject: "VLSI Design" },
+        { code: "EE3601", subject: "Electric Drives and Control" },
+        { code: "EE3602", subject: "High Voltage Engineering" },
+        { code: "EE3603", subject: "Industrial Automation" },
+        { code: "EE3604", subject: "Internet of Things for Energy Systems" },
+        { code: "EE36E2", subject: "Professional Elective II" }
+    ]
+};
+
+const STUDENT_MARK_PROFILES = {
+    1: {
+        semesterBase: [66, 68, 70, 72, 75, 82],
+        subjectBias: {
+            "Control Systems": 9,
+            "Power Electronics": 7,
+            "Industrial Automation": 4,
+            "Microprocessors and Microcontrollers": -6,
+            "Linear Integrated Circuits": -3
+        }
     },
-    {
-        subject: "Physics",
-        examiner: "Faculty One",
-        assessmentType: "exam",
-        examDate: "2026-01-14",
-        totalMarks: 100,
-        marksDistribution: [
-            { section: "Section A", marks: 35 },
-            { section: "Section B", marks: 25 },
-            { section: "Section C", marks: 40 }
-        ],
-        questionComplexity: { easy: 20, medium: 45, hard: 35 },
-        studentMarks: [{ score: 63, studentId: "ST-002" }]
+    2: {
+        semesterBase: [63, 65, 68, 70, 74, 78],
+        subjectBias: {
+            "Digital Signal Processing": 8,
+            "Embedded Systems": 7,
+            "VLSI Design": 6,
+            "Power Systems I": -5,
+            "Electric Drives and Control": -4
+        }
     },
-    {
-        subject: "Chemistry",
-        examiner: "Faculty One",
-        assessmentType: "exam",
-        examDate: "2026-01-18",
-        totalMarks: 100,
-        marksDistribution: [
-            { section: "Section A", marks: 25 },
-            { section: "Section B", marks: 35 },
-            { section: "Section C", marks: 40 }
-        ],
-        questionComplexity: { easy: 30, medium: 45, hard: 25 },
-        studentMarks: [{ score: 78, studentId: "ST-003" }]
+    3: {
+        semesterBase: [60, 64, 67, 71, 73, 76],
+        subjectBias: {
+            "Measurements and Instrumentation": 9,
+            "Internet of Things for Energy Systems": 8,
+            "Engineering Mathematics II": 5,
+            "Electrical Machines II": -7,
+            "High Voltage Engineering": -5
+        }
     },
-    {
-        subject: "Computer Science",
-        examiner: "Faculty One",
-        assessmentType: "exam",
-        examDate: "2026-01-22",
-        totalMarks: 100,
-        marksDistribution: [
-            { section: "Section A", marks: 40 },
-            { section: "Section B", marks: 20 },
-            { section: "Section C", marks: 40 }
-        ],
-        questionComplexity: { easy: 15, medium: 55, hard: 30 },
-        studentMarks: [{ score: 69, studentId: "ST-004" }]
+    4: {
+        semesterBase: [69, 71, 73, 74, 77, 80],
+        subjectBias: {
+            "Power Systems II": 8,
+            "Renewable Energy Systems": 7,
+            "Probability and Statistics": 5,
+            "Digital Electronics": -6,
+            "VLSI Design": -4
+        }
     }
-];
+};
+
+const buildAcademicAssessmentsForStudent = (student, index) => {
+    const studentNo = (index % 4) + 1;
+    const profile = STUDENT_MARK_PROFILES[studentNo] || STUDENT_MARK_PROFILES[1];
+    const registerNumber = student.registerNumber || `2026${String(studentNo).padStart(2, "0")}`;
+
+    return Object.entries(SEMESTER_COURSES).flatMap(([semesterValue, courses]) => {
+        const semester = Number(semesterValue);
+        const semesterBase = profile.semesterBase[semester - 1] || 68;
+
+        return courses.map((course, courseIndex) => {
+            const score = clamp(
+                semesterBase +
+                ((courseIndex * 4 + studentNo * 3 + semester) % 9) -
+                4 +
+                (profile.subjectBias[course.subject] || 0),
+                45,
+                97
+            );
+            const payload = {
+                user: student._id,
+                subject: course.subject,
+                semester,
+                examiner: "Faculty One",
+                assessmentType: "exam",
+                examDate: new Date(Date.UTC(2026, semester - 1, Math.min(28, 8 + courseIndex * 2))).toISOString(),
+                totalMarks: 100,
+                marksDistribution: [{ section: "Semester Record", marks: 100 }],
+                questionComplexity: { easy: 30, medium: 45, hard: 25 },
+                studentMarks: [{ score, studentId: registerNumber }],
+                averageScore: score
+            };
+
+            return {
+                filter: {
+                    user: student._id,
+                    subject: course.subject,
+                    semester,
+                    assessmentType: "exam"
+                },
+                payload: {
+                    ...payload,
+                    ...analyzeAssessment(payload)
+                }
+            };
+        });
+    });
+};
 
 const ensureDefaultUsers = async () => {
     const usersByRole = {};
@@ -123,7 +210,9 @@ const ensureDefaultUsers = async () => {
                 email,
                 password: item.password,
                 role: item.role,
-                provider: "local"
+                provider: "local",
+                department: item.department,
+                assignedSubjects: item.assignedSubjects || []
             });
         } else {
             user.name = item.name;
@@ -133,6 +222,18 @@ const ensureDefaultUsers = async () => {
             user.provider = "local";
             user.providerId = undefined;
             user.password = item.password;
+            user.registerNumber = item.role === "student"
+                ? (user.registerNumber || `2026${String((usersByRole.student?.length || 0) + 1).padStart(2, "0")}`)
+                : user.registerNumber;
+            user.department = item.department || (item.role === "student" ? "EEE" : item.department);
+            user.semester = item.role === "student" ? (user.semester || 6) : user.semester;
+            user.assignedSubjects = item.assignedSubjects || [];
+        }
+
+        if (item.role === "student") {
+            user.registerNumber = user.registerNumber || `2026${String((usersByRole.student?.length || 0) + 1).padStart(2, "0")}`;
+            user.department = user.department || "EEE";
+            user.semester = user.semester || 6;
         }
 
         await user.save();
@@ -141,20 +242,16 @@ const ensureDefaultUsers = async () => {
     }
 
     const students = usersByRole.student || [];
-    for (let index = 0; index < students.length && index < SAMPLE_ASSESSMENTS.length; index += 1) {
+    for (let index = 0; index < students.length; index += 1) {
         const student = students[index];
-        const existingCount = await Assessment.countDocuments({ user: student._id });
-        if (existingCount > 0) {
-            continue;
+        const generatedAssessments = buildAcademicAssessmentsForStudent(student, index);
+        for (const entry of generatedAssessments) {
+            await Assessment.findOneAndUpdate(
+                entry.filter,
+                { $set: entry.payload },
+                { upsert: true, returnDocument: "after", setDefaultsOnInsert: true }
+            );
         }
-
-        const payload = SAMPLE_ASSESSMENTS[index];
-        const analysis = analyzeAssessment(payload);
-        await Assessment.create({
-            ...payload,
-            ...analysis,
-            user: student._id
-        });
     }
 };
 

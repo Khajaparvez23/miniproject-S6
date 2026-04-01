@@ -3,6 +3,7 @@ const jwt = require("jsonwebtoken");
 const passport = require("passport");
 
 const User = require("../models/User");
+const Assessment = require("../models/Assessment");
 const authMiddleware = require("../middleware/auth");
 const { requireRole } = require("../middleware/roles");
 
@@ -60,12 +61,32 @@ const serializeUser = (user) => ({
     role: user.role,
     registerNumber: user.registerNumber || "",
     department: user.department || "",
+    assignedSubjects: Array.isArray(user.assignedSubjects) ? user.assignedSubjects : [],
     semester: user.semester ?? null
 });
 
+const normalizeAssignedSubjects = (value) => {
+    const items = Array.isArray(value)
+        ? value
+        : String(value || "")
+            .split(",")
+            .map((item) => item.trim());
+    return [...new Set(items.filter(Boolean))];
+};
+
 router.post("/register", async (req, res) => {
     try {
-        const { name, username, email, password, role, registerNumber, department, semester } = req.body;
+        const {
+            name,
+            username,
+            email,
+            password,
+            role,
+            registerNumber,
+            department,
+            assignedSubjects,
+            semester
+        } = req.body;
 
         if (!name || !email || !password) {
             return res.status(400).json({ message: "name, email, and password are required" });
@@ -94,6 +115,7 @@ router.post("/register", async (req, res) => {
             role: roleValue,
             registerNumber: registerNumber ? String(registerNumber).trim() : undefined,
             department: department ? String(department).trim() : undefined,
+            assignedSubjects: normalizeAssignedSubjects(assignedSubjects),
             semester: Number.isFinite(Number(semester)) ? Number(semester) : undefined
         });
         await enforceReservedRole(user);
@@ -173,7 +195,7 @@ router.get(
 
 router.get("/profile", authMiddleware, async (req, res) => {
     try {
-        const user = await User.findById(req.user.id).select("name username email role registerNumber department semester");
+        const user = await User.findById(req.user.id).select("name username email role registerNumber department assignedSubjects semester");
         if (!user) {
             return res.status(404).json({ message: "User not found" });
         }
@@ -186,9 +208,102 @@ router.get("/profile", authMiddleware, async (req, res) => {
 router.get("/users", authMiddleware, requireRole("admin"), async (_req, res) => {
     try {
         const users = await User.find({})
-            .select("name username email role provider createdAt")
+            .select("name username email role provider createdAt registerNumber department assignedSubjects semester")
             .sort({ createdAt: 1 });
         return res.status(200).json(users);
+    } catch (error) {
+        return res.status(500).json({ message: error.message });
+    }
+});
+
+router.post("/users", authMiddleware, requireRole("admin"), async (req, res) => {
+    try {
+        const {
+            name,
+            username,
+            email,
+            password,
+            role,
+            registerNumber,
+            department,
+            assignedSubjects,
+            semester
+        } = req.body;
+
+        if (!name || !email || !password) {
+            return res.status(400).json({ message: "name, email, and password are required" });
+        }
+
+        const normalizedEmail = email.toLowerCase().trim();
+        const requestedUsername = toBaseUsername(username || normalizedEmail.split("@")[0]);
+        const roleValue = ["student", "faculty", "admin"].includes(role) ? role : "student";
+
+        const [existingEmail, generatedUsername] = await Promise.all([
+            User.findOne({ email: normalizedEmail }),
+            uniqueUsername(requestedUsername)
+        ]);
+
+        if (existingEmail) {
+            return res.status(409).json({ message: "User already exists" });
+        }
+
+        const user = await User.create({
+            name,
+            username: generatedUsername,
+            email: normalizedEmail,
+            password,
+            role: roleValue,
+            registerNumber: registerNumber ? String(registerNumber).trim() : undefined,
+            department: department ? String(department).trim() : undefined,
+            assignedSubjects: normalizeAssignedSubjects(assignedSubjects),
+            semester: Number.isFinite(Number(semester)) ? Number(semester) : undefined
+        });
+
+        return res.status(201).json(serializeUser(user));
+    } catch (error) {
+        return res.status(500).json({ message: error.message });
+    }
+});
+
+router.put("/users/:id", authMiddleware, requireRole("admin"), async (req, res) => {
+    try {
+        const user = await User.findById(req.params.id);
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        const { name, email, registerNumber, department, assignedSubjects, semester, password } = req.body;
+
+        if (name !== undefined) user.name = String(name).trim();
+        if (email !== undefined) user.email = String(email).trim().toLowerCase();
+        if (registerNumber !== undefined) user.registerNumber = String(registerNumber).trim();
+        if (department !== undefined) user.department = String(department).trim();
+        if (assignedSubjects !== undefined) user.assignedSubjects = normalizeAssignedSubjects(assignedSubjects);
+        if (semester !== undefined) {
+            user.semester = Number.isFinite(Number(semester)) ? Number(semester) : undefined;
+        }
+        if (password) {
+            user.password = password;
+        }
+
+        await user.save();
+        return res.status(200).json(serializeUser(user));
+    } catch (error) {
+        return res.status(500).json({ message: error.message });
+    }
+});
+
+router.delete("/users/:id", authMiddleware, requireRole("admin"), async (req, res) => {
+    try {
+        const user = await User.findById(req.params.id);
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        await Assessment.deleteMany({ user: user._id });
+        await user.deleteOne();
+
+        return res.status(200).json({ message: "User deleted" });
     } catch (error) {
         return res.status(500).json({ message: error.message });
     }

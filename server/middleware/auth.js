@@ -11,7 +11,7 @@ const authMiddleware = async (req, res, next) => {
 
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        const user = await User.findById(decoded.id).select("name username email role registerNumber department semester");
+        const user = await User.findById(decoded.id).select("name username email role registerNumber department assignedSubjects semester");
         if (!user) {
             return res.status(401).json({ message: "User no longer exists" });
         }
@@ -23,6 +23,7 @@ const authMiddleware = async (req, res, next) => {
             role: user.role,
             registerNumber: user.registerNumber || "",
             department: user.department || "",
+            assignedSubjects: Array.isArray(user.assignedSubjects) ? user.assignedSubjects : [],
             semester: user.semester ?? null
         };
         return next();

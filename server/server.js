@@ -19,6 +19,7 @@ const { ensureDefaultUsers } = require("./utils/seedDefaultUsers");
 
 const app = express();
 const port = process.env.PORT || 5000;
+const enableHttpLogs = process.env.DISABLE_HTTP_LOGS !== "1";
 
 if (!process.env.MONGO_URI) {
     console.error("MONGO_URI is required in server/.env");
@@ -41,11 +42,14 @@ const corsOptions = process.env.CLIENT_URL
 app.use(cors(corsOptions));
 app.use(express.json());
 app.use(passport.initialize());
-app.use(morgan("combined", { stream: { write: (msg) => logger.info(msg.trim()) } }));
+if (enableHttpLogs) {
+    app.use(morgan("combined", { stream: { write: (msg) => logger.info(msg.trim()) } }));
+}
 
 const apiLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
     max: 300,
+    skip: (req) => ["127.0.0.1", "::1", "::ffff:127.0.0.1"].includes(req.ip),
     standardHeaders: true,
     legacyHeaders: false
 });
@@ -53,6 +57,7 @@ const apiLimiter = rateLimit({
 const authLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
     max: 30,
+    skip: (req) => ["127.0.0.1", "::1", "::ffff:127.0.0.1"].includes(req.ip),
     standardHeaders: true,
     legacyHeaders: false
 });
@@ -65,7 +70,9 @@ app.get("/health", (_req, res) => {
 });
 
 app.use("/api", apiLimiter);
-app.use("/api/auth", authLimiter, authRoutes);
+app.use("/api/auth/login", authLimiter);
+app.use("/api/auth/register", authLimiter);
+app.use("/api/auth", authRoutes);
 app.use("/api/assessments", assessmentRoutes);
 app.use("/api/preferences", preferencesRoutes);
 

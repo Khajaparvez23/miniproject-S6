@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { getAssessments } from '../services/api.js'
-import { useAuth } from '../context/AuthContext.jsx'
+import { useAuth } from '../context/useAuth.js'
 import { BalanceChart, DifficultyChart, MarksChart, SubjectChart } from '../components/Charts.jsx'
 import { exportAssessmentsCSV, exportAssessmentsPDF } from '../utils/export.js'
 
@@ -19,6 +19,7 @@ const initialFilters = {
 
 export default function Reports() {
   const { token } = useAuth()
+  const reportsLoadKeyRef = useRef('')
   const [assessments, setAssessments] = useState([])
   const [loading, setLoading] = useState(true)
   const [tableLoading, setTableLoading] = useState(false)
@@ -27,6 +28,8 @@ export default function Reports() {
   const hasData = assessments.length > 0
 
   useEffect(() => {
+    if (!token || reportsLoadKeyRef.current === token) return
+    reportsLoadKeyRef.current = token
     const load = async () => {
       try {
         const assessmentData = await getAssessments(token)
