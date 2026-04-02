@@ -21,6 +21,8 @@ const configurePassport = () => {
     ]
   )
 
+  const isAllowedGoogleEmail = (email) => normalizedAdminEmails.has(String(email || '').toLowerCase())
+
   const roleForEmail = (email) =>
     normalizedAdminEmails.has(email.toLowerCase()) ? 'admin' : 'student'
 
@@ -54,6 +56,10 @@ const configurePassport = () => {
           const email = profile.emails?.[0]?.value
           if (!email) {
             return done(new Error('Google account email is missing'))
+          }
+
+          if (!isAllowedGoogleEmail(email)) {
+            return done(null, false, { message: 'This Google account is not allowed to sign in.' })
           }
 
           const existing = await User.findOne({ email: email.toLowerCase() })
