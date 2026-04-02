@@ -6,6 +6,7 @@ const User = require("../models/User");
 const Assessment = require("../models/Assessment");
 const authMiddleware = require("../middleware/auth");
 const { requireRole } = require("../middleware/roles");
+const { isGoogleOAuthConfigured } = require("../config/passport");
 
 const router = express.Router();
 
@@ -72,6 +73,13 @@ const normalizeAssignedSubjects = (value) => {
             .split(",")
             .map((item) => item.trim());
     return [...new Set(items.filter(Boolean))];
+};
+
+const ensureGoogleOAuthConfigured = (_req, res, next) => {
+    if (!isGoogleOAuthConfigured()) {
+        return res.status(503).json({ message: "Google login is not configured on this server" });
+    }
+    return next();
 };
 
 router.post("/register", async (req, res) => {
@@ -165,7 +173,7 @@ router.post("/login", async (req, res) => {
     }
 });
 
-router.get("/google", (req, res, next) => {
+router.get("/google", ensureGoogleOAuthConfigured, (req, res, next) => {
     const rawLoginHint = String(req.query.login_hint || "").trim().toLowerCase();
     const loginHint = rawLoginHint && rawLoginHint.includes("@") ? rawLoginHint : undefined;
 
@@ -181,6 +189,7 @@ router.get("/google", (req, res, next) => {
 
 router.get(
     "/google/callback",
+    ensureGoogleOAuthConfigured,
     passport.authenticate("google", {
         session: false,
         failureRedirect: `${process.env.CLIENT_URL}/login?error=google`

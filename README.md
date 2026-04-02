@@ -8,6 +8,7 @@
    - `MONGO_URI=...`
    - `JWT_SECRET=...`
    - `CLIENT_URL=http://localhost:5173`
+   - Optional for Google login: `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_ADMIN_EMAILS`
 3. `npm install`
 4. `npm run dev`
 
@@ -21,26 +22,30 @@
 ## Deployment (recommended)
 
 ### API on Render
-1. Create a new **Web Service** from the `server` folder.
-2. Set build command: `npm install`
-3. Set start command: `npm start`
-4. Add environment variables:
+1. Fastest setup: create a new **Blueprint** from this repo and let Render read [render.yaml](/d:/mini%20project/render.yaml).
+2. If you prefer manual setup, create a new **Web Service** from the `server` folder.
+3. Set build command: `npm install`
+4. Set start command: `npm start`
+5. Add environment variables:
    - `MONGO_URI`
    - `JWT_SECRET`
    - `CLIENT_URL` (the Vercel URL below)
    - `LOG_LEVEL=info`
-5. Deploy and note the API URL.
+   - Optional for Google login: `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_ADMIN_EMAILS`
+6. Deploy and note the API URL.
 
 ### Client on Vercel
 1. Import the `client` folder as a new Vercel project.
-2. Set the environment variable:
+2. Vercel can use [vercel.json](/d:/mini%20project/client/vercel.json) automatically.
+3. Set the environment variable:
    - `VITE_API_URL` = Render API URL
-3. Deploy.
+4. Deploy.
 
 ## Health check
 - `GET /health`
 
 ## Notes
+- Google OAuth is optional in production. If Google credentials are not set, email/password login still works and `/api/auth/google` returns `503`.
 - Role-based access is enabled with three roles: `student`, `faculty`, `admin`.
 - `student` and `faculty` are read-only in the dashboard.
 - `faculty` can additionally view results of 4 students.

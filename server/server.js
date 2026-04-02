@@ -10,7 +10,7 @@ const rateLimit = require("express-rate-limit");
 const passport = require("passport");
 
 const connectDB = require("./config/db");
-const configurePassport = require("./config/passport");
+const { configurePassport } = require("./config/passport");
 const authRoutes = require("./routes/authRoutes");
 const assessmentRoutes = require("./routes/assessmentRoutes");
 const preferencesRoutes = require("./routes/preferencesRoutes");
@@ -31,7 +31,10 @@ if (!process.env.JWT_SECRET) {
     process.exit(1);
 }
 
-configurePassport();
+const googleOAuthEnabled = configurePassport();
+if (!googleOAuthEnabled) {
+    logger.warn("Google OAuth is disabled because GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, or CLIENT_URL is missing.");
+}
 
 app.set("trust proxy", 1);
 app.use(helmet());

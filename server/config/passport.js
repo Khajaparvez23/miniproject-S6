@@ -3,16 +3,13 @@ const GoogleStrategy = require('passport-google-oauth20').Strategy
 
 const User = require('../models/User')
 
-const required = (value, name) => {
-  if (!value) {
-    throw new Error(`${name} is required for Google OAuth`)
-  }
-}
+const isGoogleOAuthConfigured = () =>
+  Boolean(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET && process.env.CLIENT_URL)
 
 const configurePassport = () => {
-  required(process.env.GOOGLE_CLIENT_ID, 'GOOGLE_CLIENT_ID')
-  required(process.env.GOOGLE_CLIENT_SECRET, 'GOOGLE_CLIENT_SECRET')
-  required(process.env.CLIENT_URL, 'CLIENT_URL')
+  if (!isGoogleOAuthConfigured()) {
+    return false
+  }
 
   const normalizedAdminEmails = new Set(
     [
@@ -85,6 +82,8 @@ const configurePassport = () => {
       }
     )
   )
+
+  return true
 }
 
-module.exports = configurePassport
+module.exports = { configurePassport, isGoogleOAuthConfigured }
