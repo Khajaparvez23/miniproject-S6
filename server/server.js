@@ -7,6 +7,7 @@ const express = require("express");
 const helmet = require("helmet");
 const morgan = require("morgan");
 const rateLimit = require("express-rate-limit");
+const { ipKeyGenerator } = require("express-rate-limit");
 const passport = require("passport");
 
 const connectDB = require("./config/db");
@@ -52,6 +53,7 @@ if (enableHttpLogs) {
 const apiLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
     max: 300,
+    keyGenerator: (req) => ipKeyGenerator(req.ip),
     skip: (req) => ["127.0.0.1", "::1", "::ffff:127.0.0.1"].includes(req.ip),
     standardHeaders: true,
     legacyHeaders: false
@@ -60,6 +62,7 @@ const apiLimiter = rateLimit({
 const authLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
     max: 30,
+    keyGenerator: (req) => ipKeyGenerator(req.ip),
     skip: (req) => ["127.0.0.1", "::1", "::ffff:127.0.0.1"].includes(req.ip),
     standardHeaders: true,
     legacyHeaders: false
