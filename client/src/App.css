@@ -1549,61 +1549,48 @@ button:disabled {
 }
 
 .password-field {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  width: 100%;
-}
-
-.password-field input {
-  flex: 1;
-}
-
-.password-toggle {
-  flex-shrink: 0;
-  min-width: 72px;
-  padding: 10px 14px;
-  border-radius: 999px;
-  border: 1px solid rgba(148, 163, 184, 0.28);
-  background: rgba(255, 255, 255, 0.9);
-  color: #334155;
-  font-weight: 600;
-  cursor: pointer;
-  transition: border-color 160ms ease, background 160ms ease, transform 160ms ease;
-}
-
-.password-toggle:hover {
-  transform: translateY(-1px);
-  border-color: rgba(37, 99, 235, 0.32);
-  background: #ffffff;
-}
-
-.password-toggle:focus-visible {
-  outline: none;
-  border-color: rgba(37, 99, 235, 0.4);
-  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
-}
-
-.auth-password-field {
+  position: relative;
   display: block;
   width: 100%;
 }
 
-.auth-checkbox {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  width: fit-content;
-  font-weight: 600;
-  color: #334155;
-  cursor: pointer;
+.password-field .password-input {
+  width: 100%;
+  padding-right: 50px;
 }
 
-.auth-checkbox input {
+.password-toggle-icon {
+  position: absolute;
+  top: 50%;
+  right: 12px;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: #64748b;
+  cursor: pointer;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 160ms ease, transform 160ms ease;
+}
+
+.password-toggle-icon:hover {
+  color: #1d4ed8;
+  transform: translateY(-50%) scale(1.04);
+}
+
+.password-toggle-icon:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
+  border-radius: 999px;
+}
+
+.password-toggle-icon svg {
   width: 18px;
   height: 18px;
-  margin: 0;
-  accent-color: #2563eb;
 }
 
 .auth-form .primary {

@@ -7,6 +7,46 @@ const initialForm = {
   password: '',
 }
 
+function PasswordEyeIcon({ visible }) {
+  if (visible) {
+    return (
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path
+          d="M3 12s3.5-6 9-6 9 6 9 6-3.5 6-9 6-9-6-9-6Z"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        <circle cx="12" cy="12" r="2.75" fill="none" stroke="currentColor" strokeWidth="1.8" />
+      </svg>
+    )
+  }
+
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path
+        d="M3 12s3.5-6 9-6c2.2 0 4.08.73 5.63 1.7C19.87 9.08 21 12 21 12s-3.5 6-9 6c-2.2 0-4.08-.73-5.63-1.7C4.13 14.92 3 12 3 12Z"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <circle cx="12" cy="12" r="2.75" fill="none" stroke="currentColor" strokeWidth="1.8" />
+      <path
+        d="M4 4l16 16"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  )
+}
+
 export default function Login() {
   const { isAuthenticated, login } = useAuth()
   const [form, setForm] = useState(initialForm)
@@ -71,23 +111,24 @@ export default function Login() {
             </label>
             <label>
               Password
-              <span className="auth-password-field">
+              <span className="password-field">
                 <input
+                  className="password-input"
                   type={showPassword ? 'text' : 'password'}
                   value={form.password}
                   onChange={(event) => handleChange('password', event.target.value)}
                   autoComplete="new-password"
                 />
+                <button
+                  className="password-toggle-icon"
+                  type="button"
+                  onClick={() => setShowPassword((prev) => !prev)}
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  aria-pressed={showPassword}
+                >
+                  <PasswordEyeIcon visible={showPassword} />
+                </button>
               </span>
-            </label>
-            <label className="auth-checkbox" htmlFor="login-show-password">
-              <input
-                id="login-show-password"
-                type="checkbox"
-                checked={showPassword}
-                onChange={() => setShowPassword((prev) => !prev)}
-              />
-              <span>Show password</span>
             </label>
             {error && (
               <div className="status error" role="alert">

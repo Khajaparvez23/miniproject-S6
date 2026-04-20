@@ -82,6 +82,46 @@ const formatShortDate = (value) => {
   return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
 }
 
+function PasswordEyeIcon({ visible }) {
+  if (visible) {
+    return (
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path
+          d="M3 12s3.5-6 9-6 9 6 9 6-3.5 6-9 6-9-6-9-6Z"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        <circle cx="12" cy="12" r="2.75" fill="none" stroke="currentColor" strokeWidth="1.8" />
+      </svg>
+    )
+  }
+
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path
+        d="M3 12s3.5-6 9-6c2.2 0 4.08.73 5.63 1.7C19.87 9.08 21 12 21 12s-3.5 6-9 6c-2.2 0-4.08-.73-5.63-1.7C4.13 14.92 3 12 3 12Z"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <circle cx="12" cy="12" r="2.75" fill="none" stroke="currentColor" strokeWidth="1.8" />
+      <path
+        d="M4 4l16 16"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  )
+}
+
 const parseRangeLabel = (label, totalMarks) => {
   if (!label) return null
   const matches = String(label).match(/\d+(\.\d+)?/g)
@@ -2784,19 +2824,20 @@ export default function Dashboard() {
                       Password
                       <span className="password-field">
                         <input
+                          className="password-input"
                           type={showStudentPassword ? 'text' : 'password'}
                           value={studentManagementForm.password}
                           onChange={(event) => handleStudentFormChange('password', event.target.value)}
                           placeholder={editingStudentId ? 'Leave blank to keep current' : 'Set password'}
                         />
                         <button
-                          className="password-toggle"
+                          className="password-toggle-icon"
                           type="button"
                           onClick={() => setShowStudentPassword((prev) => !prev)}
                           aria-label={showStudentPassword ? 'Hide password' : 'Show password'}
                           aria-pressed={showStudentPassword}
                         >
-                          {showStudentPassword ? 'Hide' : 'Show'}
+                          <PasswordEyeIcon visible={showStudentPassword} />
                         </button>
                       </span>
                     </label>
@@ -2935,19 +2976,20 @@ export default function Dashboard() {
                       Password
                       <span className="password-field">
                         <input
+                          className="password-input"
                           type={showFacultyPassword ? 'text' : 'password'}
                           value={facultyManagementForm.password}
                           onChange={(event) => handleFacultyFormChange('password', event.target.value)}
                           placeholder={editingFacultyId ? 'Leave blank to keep current' : 'Set password'}
                         />
                         <button
-                          className="password-toggle"
+                          className="password-toggle-icon"
                           type="button"
                           onClick={() => setShowFacultyPassword((prev) => !prev)}
                           aria-label={showFacultyPassword ? 'Hide password' : 'Show password'}
                           aria-pressed={showFacultyPassword}
                         >
-                          {showFacultyPassword ? 'Hide' : 'Show'}
+                          <PasswordEyeIcon visible={showFacultyPassword} />
                         </button>
                       </span>
                     </label>
