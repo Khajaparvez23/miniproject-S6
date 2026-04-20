@@ -608,9 +608,11 @@ export default function Dashboard() {
   const [studentManagementSearch, setStudentManagementSearch] = useState('')
   const [studentManagementSemester, setStudentManagementSemester] = useState('')
   const [studentManagementForm, setStudentManagementForm] = useState(initialStudentForm)
+  const [showStudentPassword, setShowStudentPassword] = useState(false)
   const [editingStudentId, setEditingStudentId] = useState('')
   const [facultyManagementSearch, setFacultyManagementSearch] = useState('')
   const [facultyManagementForm, setFacultyManagementForm] = useState(initialFacultyForm)
+  const [showFacultyPassword, setShowFacultyPassword] = useState(false)
   const [editingFacultyId, setEditingFacultyId] = useState('')
   const [academicRecordForm, setAcademicRecordForm] = useState(initialAcademicRecordForm)
   const [editingAcademicRecordId, setEditingAcademicRecordId] = useState('')
@@ -758,11 +760,13 @@ export default function Dashboard() {
 
   const resetStudentManagementForm = () => {
     setStudentManagementForm(initialStudentForm)
+    setShowStudentPassword(false)
     setEditingStudentId('')
   }
 
   const resetFacultyManagementForm = () => {
     setFacultyManagementForm(initialFacultyForm)
+    setShowFacultyPassword(false)
     setEditingFacultyId('')
   }
 
@@ -818,6 +822,7 @@ export default function Dashboard() {
   const handleEditStudent = (student) => {
     const normalizedStudent = buildStudentManagementRecord(student)
     setEditingStudentId(student._id || student.id)
+    setShowStudentPassword(false)
     setStudentManagementForm({
       name: normalizedStudent.name || '',
       email: normalizedStudent.email || '',
@@ -869,6 +874,7 @@ export default function Dashboard() {
   const handleEditFaculty = (faculty, subjectOptions) => {
     const normalizedFaculty = buildFacultyManagementRecord(faculty, subjectOptions)
     setEditingFacultyId(faculty._id || faculty.id)
+    setShowFacultyPassword(false)
     setFacultyManagementForm({
       name: normalizedFaculty.name || '',
       email: normalizedFaculty.email || '',
@@ -2776,12 +2782,23 @@ export default function Dashboard() {
                     </label>
                     <label>
                       Password
-                      <input
-                        type="text"
-                        value={studentManagementForm.password}
-                        onChange={(event) => handleStudentFormChange('password', event.target.value)}
-                        placeholder={editingStudentId ? 'Leave blank to keep current' : 'Set password'}
-                      />
+                      <span className="password-field">
+                        <input
+                          type={showStudentPassword ? 'text' : 'password'}
+                          value={studentManagementForm.password}
+                          onChange={(event) => handleStudentFormChange('password', event.target.value)}
+                          placeholder={editingStudentId ? 'Leave blank to keep current' : 'Set password'}
+                        />
+                        <button
+                          className="password-toggle"
+                          type="button"
+                          onClick={() => setShowStudentPassword((prev) => !prev)}
+                          aria-label={showStudentPassword ? 'Hide password' : 'Show password'}
+                          aria-pressed={showStudentPassword}
+                        >
+                          {showStudentPassword ? 'Hide' : 'Show'}
+                        </button>
+                      </span>
                     </label>
                   </div>
                   <div className="filter-row">
@@ -2916,12 +2933,23 @@ export default function Dashboard() {
                     </label>
                     <label>
                       Password
-                      <input
-                        type="text"
-                        value={facultyManagementForm.password}
-                        onChange={(event) => handleFacultyFormChange('password', event.target.value)}
-                        placeholder={editingFacultyId ? 'Leave blank to keep current' : 'Set password'}
-                      />
+                      <span className="password-field">
+                        <input
+                          type={showFacultyPassword ? 'text' : 'password'}
+                          value={facultyManagementForm.password}
+                          onChange={(event) => handleFacultyFormChange('password', event.target.value)}
+                          placeholder={editingFacultyId ? 'Leave blank to keep current' : 'Set password'}
+                        />
+                        <button
+                          className="password-toggle"
+                          type="button"
+                          onClick={() => setShowFacultyPassword((prev) => !prev)}
+                          aria-label={showFacultyPassword ? 'Hide password' : 'Show password'}
+                          aria-pressed={showFacultyPassword}
+                        >
+                          {showFacultyPassword ? 'Hide' : 'Show'}
+                        </button>
+                      </span>
                     </label>
                   </div>
                   <div className="filter-row">

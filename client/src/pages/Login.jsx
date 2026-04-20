@@ -12,11 +12,13 @@ export default function Login() {
   const [form, setForm] = useState(initialForm)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
   const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:5000'
 
   useEffect(() => {
     setForm(initialForm)
     setError('')
+    setShowPassword(false)
   }, [])
 
   if (isAuthenticated) {
@@ -69,12 +71,23 @@ export default function Login() {
             </label>
             <label>
               Password
+              <span className="auth-password-field">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  value={form.password}
+                  onChange={(event) => handleChange('password', event.target.value)}
+                  autoComplete="new-password"
+                />
+              </span>
+            </label>
+            <label className="auth-checkbox" htmlFor="login-show-password">
               <input
-                type="password"
-                value={form.password}
-                onChange={(event) => handleChange('password', event.target.value)}
-                autoComplete="new-password"
+                id="login-show-password"
+                type="checkbox"
+                checked={showPassword}
+                onChange={() => setShowPassword((prev) => !prev)}
               />
+              <span>Show password</span>
             </label>
             {error && (
               <div className="status error" role="alert">
